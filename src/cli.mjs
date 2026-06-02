@@ -9,7 +9,7 @@ import {
   storeStatus,
   summarizeIndex,
 } from "./indexer.mjs";
-import { importMarkdownTree } from "./importer.mjs";
+import { importHtmlTree, importMarkdownTree } from "./importer.mjs";
 import { indexPath, pagesPath, parseDocId, resolveStoreRoot } from "./paths.mjs";
 import { resolveLibraryName, saveAlias } from "./registry.mjs";
 import { searchIndex } from "./search.mjs";
@@ -99,6 +99,26 @@ export async function runCli(argv, io = defaultIo()) {
       });
       io.out(
         `Imported ${result.written.length} docs for ${result.library}@${result.version}`,
+      );
+      return;
+    }
+
+    case "import-html": {
+      const [library, version, sourceDir] = parsed.positionals;
+      if (!library || !version || !sourceDir) {
+        throw new Error(
+          "usage: opendocu import-html <library> <version> <source-dir> [--url-base <url>]",
+        );
+      }
+      await initStore(storeRoot);
+      const result = await importHtmlTree(storeRoot, {
+        library,
+        version,
+        sourceDir,
+        urlBase: parsed.flags.urlBase,
+      });
+      io.out(
+        `Imported ${result.written.length} HTML docs for ${result.library}@${result.version}`,
       );
       return;
     }
@@ -339,6 +359,7 @@ function helpText() {
 Usage:
   opendocu init [--store <path>]
   opendocu import <library> <version> <source-dir> [--url-base <url>] [--store <path>]
+  opendocu import-html <library> <version> <source-dir> [--url-base <url>] [--store <path>]
   opendocu alias <alias> <library> [--store <path>]
   opendocu resolve <library> [--store <path>] [--json]
   opendocu index [--store <path>] [--library <name>] [--version <version>]

@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { buildIndex, initStore } from "../src/indexer.mjs";
-import { importMarkdownTree } from "../src/importer.mjs";
+import { importHtmlTree, importMarkdownTree } from "../src/importer.mjs";
 import { searchIndex } from "../src/search.mjs";
 
 test("indexes versioned markdown and returns source-backed chunk matches", async () => {
@@ -176,6 +176,60 @@ The \`diagnostics_channel.tracingChannel()\` API creates tracing channels.
 
   assert.equal(result.count, 1);
   assert.equal(result.results[0].doc_id, "node@24/api/diagnostics-channel");
+});
+
+test("imports local HTML docs into searchable markdown", async () => {
+  const source = await fs.mkdtemp(path.join(os.tmpdir(), "opendocu-html-source-"));
+  await fs.mkdir(path.join(source, "api"), { recursive: true });
+  await fs.writeFile(
+    path.join(source, "api", "async_context.html"),
+    `<!doctype html>
+<html>
+  <head>
+    <title>Asynchronous context tracking | Node.js</title>
+    <link rel="canonical" href="https://nodejs.org/api/async_context.html">
+  </head>
+  <body>
+    <nav>Navigation should not be indexed.</nav>
+    <main>
+      <h1>Asynchronous context tracking</h1>
+      <h3>Static method: <code>AsyncLocalStorage.snapshot()</code><a href="#snapshot">#</a></h3>
+      <p>Returns a new function that captures the current execution context.</p>
+      <pre><code>const runInAsyncScope = AsyncLocalStorage.snapshot()</code></pre>
+    </main>
+  </body>
+</html>
+`,
+  );
+
+  const store = await makeStore();
+  const imported = await importHtmlTree(store, {
+    library: "node",
+    version: "24",
+    sourceDir: path.join(source, "api"),
+    urlBase: "https://nodejs.org/download/release/v24.16.0/docs/api",
+  });
+
+  assert.equal(imported.written.length, 1);
+  const stored = await fs.readFile(imported.written[0], "utf8");
+  assert.match(stored, /source_format: "html"/);
+  assert.match(stored, /url: "https:\/\/nodejs\.org\/download\/release\/v24\.16\.0\/docs\/api\/async_context\.html"/);
+  assert.match(stored, /source_canonical: "https:\/\/nodejs\.org\/api\/async_context\.html"/);
+  assert.match(stored, /### Static method: `AsyncLocalStorage.snapshot\(\)`/);
+  assert.doesNotMatch(stored, /snapshot\(\)#/);
+  assert.doesNotMatch(stored, /Navigation should not be indexed/);
+
+  const index = await buildIndex(store);
+  const result = searchIndex(index, {
+    library: "node",
+    version: "24",
+    terms: ["AsyncLocalStorage.snapshot", "context"],
+    match: "all",
+    limit: 5,
+  });
+
+  assert.ok(result.count >= 1);
+  assert.equal(result.results[0].doc_id, "node@24/async_context");
 });
 
 test("indexes tokens that collide with object prototype names", async () => {

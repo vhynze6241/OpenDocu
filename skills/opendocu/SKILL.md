@@ -7,6 +7,10 @@ description: Use OpenDocu when a coding task needs official framework, library, 
 
 OpenDocu is a local-first documentation memory. The CLI is deterministic: it imports local Markdown trees, indexes, searches, gets pages, lists libraries, and diagnoses the store. The agent supplies judgment: identify versions, choose keywords, fetch official docs when missing, preserve source material, and answer from retrieved evidence.
 
+## CLI Resolution
+
+Prefer `opendocu` when it is on PATH. If this repository is checked out locally, use `node bin/opendocu.mjs` from the checkout. In a Claude Code plugin session, use `node "${CLAUDE_PLUGIN_ROOT}/bin/opendocu.mjs"` if `opendocu` is unavailable.
+
 ## Quick Workflow
 
 1. Identify the library and version from the user's project or request.

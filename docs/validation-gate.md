@@ -15,7 +15,7 @@ Do not create targeted files after seeing the niche questions. That would invali
 Run the current real gate with:
 
 ```bash
-npm run gate:real
+npm run gate:all
 ```
 
 Minimum acceptance:

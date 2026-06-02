@@ -30,6 +30,15 @@ opendocu import node 24.16.0 ./node/doc/api --url-base https://github.com/nodejs
 opendocu import react 19.0.0 ./react.dev/src/content/reference --url-base https://github.com/reactjs/react.dev/blob/main/src/content/reference
 ```
 
+If official docs are available only as local HTML files, import the HTML tree:
+
+```bash
+opendocu import-html <library> <version> <source-dir> --url-base <official-url-base>
+opendocu index
+```
+
+HTML import is deterministic and best-effort. It preserves headings, code blocks, links, canonical URLs, and source hashes, but you should inspect search results and use `opendocu get` for pages with complex tables or custom components.
+
 ## Official GitHub Tags
 
 For official docs stored in a GitHub repository, prefer immutable tags or commits. Two reliable patterns:

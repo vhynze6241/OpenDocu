@@ -1,6 +1,6 @@
 # Validation Report
 
-This report records the first non-synthetic gate for OpenDocu.
+This report records the first v1 non-synthetic gates for OpenDocu.
 
 ## Corpus
 
@@ -39,3 +39,20 @@ Cold timing on this machine:
 - Raw `rg`: about 0.02s
 
 Raw `rg` is still faster on a 4 MB corpus. OpenDocu is currently better on agent usefulness: ranked chunks, strict version scope, citations, and structured JSON. If absolute latency over raw search is required, the next step is a persistent daemon or a native binary CLI.
+
+## HTML Gate
+
+- Source: official Node.js release HTML docs
+- URL root: `https://nodejs.org/download/release/v24.16.0/docs/api`
+- Imported pages: `async_context.html`, `diagnostics_channel.html`, `globals.html`, `stream.html`
+- Indexed docs: 4
+- Indexed chunks: 365
+- Indexed terms: 3,951
+
+HTML import preserved versioned source URLs and ranked these niche sections first:
+
+| Question shape | OpenDocu keywords | Top result |
+| --- | --- | --- |
+| Capture async context for later use | `AsyncLocalStorage.snapshot context` | `node-html@24.16.0/async_context`, heading `Static method: AsyncLocalStorage.snapshot()` |
+| Check tracing channel subscribers | `diagnostics_channel tracingChannel hasSubscribers` | `node-html@24.16.0/diagnostics_channel`, heading `tracingChannel.hasSubscribers` |
+| Create an aborting signal after a delay | `AbortSignal timeout signal` | `node-html@24.16.0/globals`, heading `Static method: AbortSignal.timeout(delay)` |
