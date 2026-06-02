@@ -189,7 +189,7 @@ function validateReadmeInstallPrompt(relativePath) {
     return;
   }
 
-  for (const required of ["Agent install prompt", "Install the OpenDocu coding-agent plugin", "https://github.com/yu2001-s/OpenDocu"]) {
+  for (const required of ["Install the OpenDocu coding-agent plugin", "https://github.com/yu2001-s/OpenDocu"]) {
     if (!content.includes(required)) {
       errors.push(`${relativePath} must mention ${required}`);
     }

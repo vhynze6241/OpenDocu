@@ -1,80 +1,87 @@
 # OpenDocu
 
-OpenDocu is a coding-agent plugin for finding, growing, and reusing official documentation.
+OpenDocu helps coding agents answer coding questions from a local, versioned store of official documentation.
 
-The plugin searches a local versioned documentation store first. When local docs are missing or too thin, the bundled skill guides the agent to search the internet for official sources, fetch the relevant docs, normalize them into source-backed Markdown or MDX, index them locally, and answer from cited raw documentation.
+The CLI is the deterministic storage and retrieval layer. It imports local Markdown, MDX, or HTML docs, builds one raw-doc search index, validates optional retrieval-repair cards, and returns ranked results with source URLs. It does not crawl websites, fetch from the internet, summarize docs, or interpret natural-language questions.
 
-The CLI is the deterministic storage and retrieval layer. It imports local files, builds one raw-doc search index, activates source-backed semantic retrieval cards, and returns ranked matches with source URLs. The CLI itself does not fetch from the internet, crawl websites, summarize docs, or interpret user questions; the agent does that work through the plugin workflow.
+The agent plugin is the workflow layer. It helps an agent choose the right library and version, fetch official docs when the local store is missing evidence, normalize those docs into source-backed Markdown or MDX, run the CLI, and answer from cited raw documentation.
+
+## Requirements
+
+- Node.js `24` or newer
+- A terminal or shell-capable coding agent
+- Official docs fetched locally before import
 
 ## Install
 
-From this repository:
+OpenDocu is currently installed from this repository checkout.
 
 ```bash
+git clone https://github.com/yu2001-s/OpenDocu.git
+cd OpenDocu
 npm install
 node bin/opendocu.mjs --help
 ```
 
-After the npm package is published:
+Use `node bin/opendocu.mjs` from the checkout unless you have installed an `opendocu` binary on your PATH. The npm package is not published yet, so `npm install -g opendocu` is not part of the current public install path.
 
-```bash
-npm install -g opendocu
-opendocu --help
-```
+## Agent Setup
 
-Agent install prompt:
+Copy this prompt into your agent:
 
 ```text
 Install the OpenDocu coding-agent plugin from https://github.com/yu2001-s/OpenDocu.
 ```
 
-For local Codex plugin evaluation or marketplace installation, build the lean plugin bundle instead
-of pointing Codex at the full development checkout:
+## Quickstart
+
+This example imports one official Node.js documentation page into a temporary local store, indexes it, searches by explicit keywords, and reads the raw page.
 
 ```bash
-npm run build:plugin
-plugin-eval analyze dist/opendocu --format markdown
+mkdir -p .tmp/opendocu-node .tmp/opendocu-store
+curl -fsSL https://raw.githubusercontent.com/nodejs/node/v24.16.0/doc/api/async_context.md \
+  -o .tmp/opendocu-node/async_context.md
+
+node bin/opendocu.mjs import node 24.16.0 .tmp/opendocu-node \
+  --url-base https://github.com/nodejs/node/blob/v24.16.0/doc/api \
+  --store .tmp/opendocu-store
+
+node bin/opendocu.mjs index --store .tmp/opendocu-store
+node bin/opendocu.mjs search node AsyncLocalStorage snapshot \
+  --version 24.16.0 \
+  --store .tmp/opendocu-store
+node bin/opendocu.mjs get node@24.16.0/async_context \
+  --store .tmp/opendocu-store
 ```
 
-## Commands
+For a normal store, omit `--store`. The default location is `~/.opendocu`. You can also set `OPENDOCU_HOME` or pass `--store <path>` per command.
 
-Raw official-doc workflow:
+## Core Commands
 
 ```bash
 opendocu init
-opendocu import node 24 ./node/doc/api --url-base https://github.com/nodejs/node/blob/v24.16.0/doc/api
-opendocu import-html node 24 ./node-html/api --url-base https://nodejs.org/download/release/v24.16.0/docs/api
+opendocu import node 24.16.0 ./node/doc/api \
+  --url-base https://github.com/nodejs/node/blob/v24.16.0/doc/api
+opendocu import-html node 24.16.0 ./node-html/api \
+  --url-base https://nodejs.org/download/release/v24.16.0/docs/api
 opendocu alias nodejs node
 opendocu resolve nodejs
 opendocu index
-opendocu search nextjs middleware cookies
-opendocu search nextjs middleware cookies --version 15 --json
-opendocu get nextjs@15/app-router/middleware
-opendocu get --library "@supabase/supabase-js" --version 2 --path reference/client
+opendocu search node AsyncLocalStorage snapshot --version 24.16.0
+opendocu get node@24.16.0/async_context
 opendocu list
 opendocu doctor
 ```
 
-Retrieval repair, after raw docs exist and a search misses because of wording:
+`search` defaults to `--match auto`: OpenDocu first requires all keywords to match, then falls back to any-keyword matching only if the strict search returns nothing. Agents should search with explicit keywords, symbols, option names, headings, or error codes instead of passing full natural-language questions.
 
-```bash
-opendocu map init node 24.16.0
-opendocu map validate node --version 24.16.0
-opendocu index
-opendocu search node AsyncLocalStorage snapshot --version 24.16.0
-```
-
-`search` defaults to `--match auto`: all keywords must match first; if that returns nothing, OpenDocu falls back to any-keyword matching and labels the result as relaxed.
-If a requested project version is more specific than the stored docs version, OpenDocu can resolve compatible semver aliases and reports the stored version it searched.
-Use `opendocu alias <alias> <library>` to keep local naming consistent, for example `nodejs -> node` or `next -> nextjs`.
-
-Use `OPENDOCU_HOME` or `--store <path>` to choose the store location. The default is `~/.opendocu`.
+If a requested project version is more specific than the stored docs version, OpenDocu can resolve compatible semver aliases and reports the stored version it searched. Use `opendocu alias <alias> <library>` to keep local names consistent, for example `nodejs -> node` or `next -> nextjs`.
 
 ## Importing Docs
 
 OpenDocu imports local files only. Fetch official docs with your agent or normal shell tools first.
 
-Markdown/MDX:
+Markdown and MDX docs can be imported directly:
 
 ```bash
 opendocu import node 24.16.0 ./node/doc/api \
@@ -82,7 +89,7 @@ opendocu import node 24.16.0 ./node/doc/api \
 opendocu index
 ```
 
-HTML:
+Static HTML docs can be imported with `import-html`:
 
 ```bash
 opendocu import-html node 24.16.0 ./node-html/api \
@@ -90,20 +97,28 @@ opendocu import-html node 24.16.0 ./node-html/api \
 opendocu index
 ```
 
-Generic official source formats:
+For generated JSON, API specs, language-native reference output, manpages, dynamic docs pages, or other source formats, normalize the official material into Markdown or MDX first. Keep source URLs, retrieved time, source format, adapter name, identifiers, declarations, parameters, warnings, version notes, examples, and links.
 
-If official docs are generated JSON, API specs, language-native reference output, manpages, dynamic docs pages, or another non-Markdown shape, normalize the official material into Markdown/MDX pages first. Keep source URLs, retrieved time, source format, adapter name, identifiers, declarations, parameters, warnings, version notes, examples, and links. Then use the same import/index/search/get flow.
+Each imported page should keep source metadata in frontmatter:
 
-```bash
-opendocu import widgetkit 2.4.0 ./normalized-widgetkit-docs \
-  --url-base https://docs.example.com/widgetkit/2.4
-opendocu index
-opendocu doctor
+```md
+---
+library: nextjs
+version: "15"
+title: Middleware
+url: https://nextjs.org/docs/app/building-your-application/routing/middleware
+retrieved_at: 2026-06-02T00:00:00Z
+content_hash: sha256:...
+---
+
+# Middleware
+
+Original documentation content goes here.
 ```
 
 ## Store Layout
 
-Agents write docs as files:
+OpenDocu writes docs under `~/.opendocu` by default:
 
 ```text
 ~/.opendocu/
@@ -125,75 +140,37 @@ Agents write docs as files:
     opendocu.index.json
 ```
 
-Each page should keep source metadata in frontmatter:
+Markdown or MDX files under `pages/` are the source of truth. `opendocu index` builds the SQLite search artifact and JSON debug artifact under `index/`.
 
-```md
----
-library: nextjs
-version: "15"
-title: Middleware
-url: https://nextjs.org/docs/app/building-your-application/routing/middleware
-retrieved_at: 2026-06-02T00:00:00Z
-content_hash: sha256:...
----
+## Retrieval Repair
 
-# Middleware
+Source docs are the knowledge base. Semantic cards are retrieval patches. Use them only after raw official docs exist and a real search misses or misranks the right evidence because of aliases, wording, or cross-topic relationships.
 
-Original documentation content goes here.
+```bash
+opendocu map init node 24.16.0
+opendocu map validate node --version 24.16.0
+opendocu index
+opendocu search node AsyncLocalStorage snapshot --version 24.16.0
 ```
 
-The Markdown or MDX file under `pages/` is the source of truth. `opendocu index` is the only indexing command; it builds both the SQLite search artifact and JSON debug artifact under `index/`, and activates valid semantic map cards.
+Cards live under `libraries/<library>/versions/<version>/map/`. They can route and rank ordinary `opendocu search` results, but final answers should still use raw docs returned by `search` or `get`.
 
-The `map/` directory is an agent-maintained semantic layer for aliases, topics, reusable summaries, concept pages, comparisons, and cross-links. It is not a second source of truth, not a complete graph over the docs, and does not have its own search interface. Semantic cards must reference raw OpenDocu doc IDs and matching source hashes; `opendocu index` excludes invalid cards and `opendocu search` uses active cards only to route and rank raw official doc evidence.
+See `docs/architecture.md` for the full data model.
 
-Source docs are the knowledge base. Semantic cards are retrieval patches: create them when a real search misses or misranks raw evidence because the user's wording, aliases, or cross-topic relationship is not obvious in the original docs. After card edits, validate, index, and replay the failed query.
-
-## Agent Boundary
-
-OpenDocu CLI handles:
-
-- deterministic raw-doc indexing
-- version-aware metadata
-- chunk-level search
-- semantic map initialization, validation, activation, and source-hash enforcement
-- BM25 ranking with title, heading, URL, and code-symbol boosts
-- health checks
-
-The OpenDocu skill handles:
-
-- deciding the correct library and version
-- choosing search keywords
-- fetching official docs when local docs are missing
-- normalizing any official source format into source-backed Markdown or MDX
-- repairing retrieval with source-backed semantic cards when raw docs exist but search misses aliases, topics, or relationships
-- running `opendocu index`
-- answering from cited local docs
-
-Agents can write Markdown files directly, use `opendocu import` after fetching an official Markdown/MDX docs tree, use `opendocu import-html` after fetching an official HTML docs tree, or normalize any other official source shape into Markdown/MDX before import. Import commands do not fetch from the internet.
-
-## Agent Adapters
-
-OpenDocu is packaged as a Codex plugin and a Claude Code plugin. Other shell-capable agents can use the same CLI through `AGENTS.md`.
-
-- Codex: `.codex-plugin/plugin.json` plus `skills/opendocu/SKILL.md`.
-- Claude Code: `.claude-plugin/plugin.json`, `skills/opendocu/SKILL.md`, and `/opendocu:search`.
-- Generic agents: read `AGENTS.md` and call the deterministic CLI.
-
-See `docs/agent-adapters.md` for the support matrix and adapter contract.
-
-## Validation
+## Contributor Checks
 
 ```bash
 npm run check
-npm run gate:fixture
-npm run gate:normalization
-npm run gate:network
 npm run gate:release
-npm run eval:live:plan -- --run-dir .tmp/live-agent-eval/run-001
-npm run eval:live:score -- .tmp/live-agent-eval/run-001
 ```
 
-The fixture gate grows an empty store across 10 library scenarios, then checks retrieval, version boundaries, option-like keywords, sparse-doc behavior, `get`, stale index rejection, and skill contracts.
-The normalization gate starts from a structured official-source fixture, normalizes it into Markdown pages, imports and indexes through the real CLI, then checks provenance, exact-symbol search, niche parameter search, `get`, and no-evidence behavior.
-The network gates import official Node.js `v24.16.0` docs in both Markdown and HTML forms, then ask niche versioned API questions through OpenDocu search.
-The live-agent eval is a manual five-set blind test for agent judgment: growers do not see query prompts, and query agents must answer from local OpenDocu evidence. See `docs/live-agent-eval.md`.
+`npm run gate:release` runs the release gate, including fixture, normalization, workflow simulation, package, and network checks. See `docs/validation-gate.md` for details.
+
+For local Codex plugin evaluation or marketplace packaging, build and inspect the generated plugin bundle:
+
+```bash
+npm run build:plugin
+plugin-eval analyze dist/opendocu --format markdown
+```
+
+`dist/opendocu` is the installable plugin artifact. Rebuild it after source changes; do not edit files in `dist/opendocu` directly.
